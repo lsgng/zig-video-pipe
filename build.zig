@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) !void {
     const mode = b.standardOptimizeOption(.{ .preferred_optimize_mode = std.builtin.OptimizeMode.ReleaseFast });
 
     const exe = b.addExecutable(.{
-        .name = "VoxelRenderer",
+        .name = "zig-video-pipe",
         .root_source_file = std.build.FileSource.relative("src/main.zig"),
         .optimize = mode,
         .target = target,
