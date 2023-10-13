@@ -12,47 +12,55 @@ pub fn main() !void {
 
     defer R.CloseWindow();
 
-    const stdin = std.io.getStdIn();
+    var pixels = [_]u8{0} ** (INPUT_WIDTH * INPUT_HEIGHT * 3);
+    var image = R.Image{
+        .data = @ptrCast(&pixels),
+        .width = INPUT_WIDTH,
+        .height = INPUT_HEIGHT,
+        .mipmaps = 1,
+        .format = 7,
+    };
+    var texture = R.LoadTextureFromImage(image);
+    defer R.UnloadTexture(texture);
+
+    const reader = std.io.getStdIn().reader();
+    var stream = std.io.bufferedReader(reader);
+    var r = stream.reader();
 
     var buf = [_]u8{0} ** (INPUT_WIDTH * INPUT_HEIGHT * 3);
     var n: usize = undefined;
+    _ = n;
 
     while (!R.WindowShouldClose()) {
         R.BeginDrawing();
         defer R.EndDrawing();
 
-        n = try stdin.read(&buf);
-        std.debug.print("{}\n", .{n});
+        R.ClearBackground(R.BLACK);
 
-        var i: usize = 0;
-        while (i < buf.len) : (i += 3) {
-            const color = R.Color{
-                .r = buf[i],
-                .g = buf[i + 1],
-                .b = buf[i + 2],
-                .a = 255,
-            };
+        _ = try r.read(&buf);
 
-            const x = i / 3 % INPUT_WIDTH;
-            const y = i / 3 / INPUT_WIDTH;
-            R.DrawPixel(@as(i32, @intCast(x)), @as(i32, @intCast(y)), color);
-        }
+        pixels = buf;
 
-        // for (buf) |a| {
-        //     std.debug.print("{c}", .{a});
-        // }
+        R.UpdateTexture(texture, &pixels);
+        R.DrawTexturePro(
+            texture,
+            R.Rectangle{
+                .x = 0,
+                .y = 0,
+                .width = INPUT_WIDTH,
+                .height = INPUT_HEIGHT,
+            },
+            R.Rectangle{
+                .x = 0,
+                .y = 0,
+                .width = @as(f32, @floatFromInt(R.GetScreenWidth())),
+                .height = @as(f32, @floatFromInt(R.GetScreenHeight())),
+            },
+            R.Vector2{ .x = 0, .y = 0 },
+            0,
+            R.WHITE,
+        );
 
-        // R.ClearBackground(R.BLACK);
         R.DrawFPS(10, 10);
-
-        // while (true) {
-        //     n = try stdin.read(&buf);
-
-        //     for (buf) |a| {
-        //         std.debug.print("{c}", .{a});
-        //     }
-
-        //     if (n == 0) break;
-        // }
     }
 }
