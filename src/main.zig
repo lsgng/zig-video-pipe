@@ -41,17 +41,13 @@ pub fn main() !void {
     process.stdout_behavior = .Pipe;
     try process.spawn();
 
-    var buffer: [INPUT_WIDTH * INPUT_HEIGHT * 3]u8 = undefined;
-
     while (!R.WindowShouldClose()) {
         R.BeginDrawing();
         defer R.EndDrawing();
 
         R.ClearBackground(R.BLACK);
 
-        _ = try process.stdout.?.readAll(&buffer);
-
-        pixels = buffer;
+        _ = try process.stdout.?.readAll(&pixels);
 
         R.UpdateTexture(texture, &pixels);
         R.DrawTexturePro(
