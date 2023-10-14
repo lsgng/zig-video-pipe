@@ -6,6 +6,20 @@ const INPUT_WIDTH = 786;
 const INPUT_HEIGHT = 588;
 
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = gpa.allocator();
+
+    const argv = [_][]const u8{
+        "ffmpeg",
+        "-i",
+        "in.mov",
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgb24",
+        "-",
+    };
+
     R.SetConfigFlags(R.ConfigFlags{});
     R.InitWindow(INPUT_WIDTH, INPUT_HEIGHT, "zig-video-pipe!");
     R.SetTargetFPS(60);
@@ -23,13 +37,11 @@ pub fn main() !void {
     var texture = R.LoadTextureFromImage(image);
     defer R.UnloadTexture(texture);
 
-    const reader = std.io.getStdIn().reader();
-    var stream = std.io.bufferedReader(reader);
-    var r = stream.reader();
+    var process = std.process.Child.init(&argv, allocator);
+    process.stdout_behavior = .Pipe;
+    try process.spawn();
 
-    var buf = [_]u8{0} ** (INPUT_WIDTH * INPUT_HEIGHT * 3);
-    var n: usize = undefined;
-    _ = n;
+    var buffer: [INPUT_WIDTH * INPUT_HEIGHT * 3]u8 = undefined;
 
     while (!R.WindowShouldClose()) {
         R.BeginDrawing();
@@ -37,9 +49,9 @@ pub fn main() !void {
 
         R.ClearBackground(R.BLACK);
 
-        _ = try r.read(&buf);
+        _ = try process.stdout.?.read(&buffer);
 
-        pixels = buf;
+        pixels = buffer;
 
         R.UpdateTexture(texture, &pixels);
         R.DrawTexturePro(
@@ -63,4 +75,6 @@ pub fn main() !void {
 
         R.DrawFPS(10, 10);
     }
+
+    _ = try process.kill();
 }
