@@ -32,7 +32,7 @@ pub fn main() !void {
         .width = INPUT_WIDTH,
         .height = INPUT_HEIGHT,
         .mipmaps = 1,
-        .format = 7,
+        .format = 4,
     };
     var texture = R.LoadTextureFromImage(image);
     defer R.UnloadTexture(texture);
@@ -49,7 +49,7 @@ pub fn main() !void {
 
         R.ClearBackground(R.BLACK);
 
-        _ = try process.stdout.?.read(&buffer);
+        _ = try process.stdout.?.readAll(&buffer);
 
         pixels = buffer;
 
